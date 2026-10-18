@@ -1,118 +1,146 @@
 # MEDIX — Connecting Care. Saving Lives.
 
-**MEDIX** is a student-built healthcare platform designed to bring essential medical services and emergency information together in one place. It aims to improve access to medical resources, simplify patient information sharing, and support faster healthcare assistance through technology.
+> **Next-Generation Centralized Healthcare Interoperability Prototype**  
+> *Developed for Healthcare Innovation & Student Hackathon Demonstration*
 
-## 🚀 Problem Statement
+MEDIX is a modern, unified healthcare web application and API service connecting emergency blood supplies, regional organ donation registries, secure patient medical QR codes, transparent AI radiograph screening, and privacy-preserving clinical report summarization.
 
-Healthcare information and essential medical services are often scattered across different platforms. During emergencies, people may struggle to find blood availability, nearby medical facilities, or important patient information quickly.
+---
 
-MEDIX aims to address these challenges through a centralized digital healthcare platform.
+## The 5 Core Features
 
-## 💡 Our Solution
+1. **Blood Availability Finder**
+   - Live simulated regional blood bank registry with search by facility, zone, and city.
+   - Filter across all 8 standard ABO/Rh blood groups (`A+`, `A-`, `B+,` `B-`, `AB+`, `AB-`, `O+`, `O-`).
+   - Atomic reservation holds with safe SQLite transactions preventing over-allocation.
+   - Voluntary blood donor pledge scheduling.
 
-MEDIX provides a single platform that brings together important healthcare features, helping users access medical information and services more conveniently.
+2. **Organ Donation & Transplant Centre**
+   - Accredited regional transplant hospital directory with filtering by specialized organ programmes (Kidney, Liver, Heart, Lung, Cornea, Pediatric).
+   - Educational guidelines on living and deceased donor matching protocols, family counseling, and official national benchmarks.
+   - Simulated donor interest registration and digital donor card minting.
 
-## ✨ Key Features
+3. **Patient Medical Information with Smart QR**
+   - Patient emergency triage profile registration (blood group, allergies, chronic conditions, active medications, emergency contacts).
+   - **Zero PHI in QR Code:** Only cryptographically unpredictable opaque tokens (`0x...`) are encoded in the scannable SVG pattern.
+   - Tiered access model:
+     - **Public Triage Scan:** Vital safety fields only (Blood Group, Age, Emergency Contact, Donor Flag); EMR masked.
+     - **Authorized Paramedic View:** Unlocks allergies, chronic conditions, medications, and notes.
+   - Dynamic token revocation returning `HTTP 410 Gone`.
 
-- **🩸 Blood Availability Finder** — Helps users search for blood availability using relevant blood groups and locations.
-- **🫀 Organ Donation & Transplant Centre** — Provides information about organ donation and transplant-related resources.
-- **📱 Patient Medical Information with QR Code** — Enables quick access to authorized patient medical information through QR codes.
-- **🩻 AI Chest X-ray Pneumonia Detection** — Designed to support pneumonia screening from chest X-ray images using an AI model.
-- **📄 Medical Report Summarizer** — Helps simplify complex medical reports into easier-to-understand summaries.
+4. **AI Chest X-ray Pneumonia Triage**
+   - Radiograph upload dropzone supporting PNG, JPEG, and WebP up to 10MB.
+   - Transparent AI readiness reporting: Discloses `model_weights_not_configured` when weights are unconfigured, refusing to fabricate fake predictions or confidence percentages.
+   - Curated educational case presets with radiologist annotations (Normal, Bacterial Lobar, Viral Interstitial).
 
-## 🎯 Objectives
+5. **Medical Report Summarizer & Clinical Extractor**
+   - Supports pasted clinical text and `.txt` / `.pdf` file uploads up to 5MB.
+   - Local rule-based clinical entity extractor: parses Blood Pressure, Heart Rate, Temperature, SpO2, Diagnoses, Medications, Lab Values, Allergies, and Dates.
+   - Local privacy guarantee: No clinical text is transmitted to external cloud services unless explicitly configured via API keys.
 
-- Centralize essential healthcare information.
-- Improve access to relevant medical resources.
-- Support quicker access to patient information during emergencies.
-- Explore AI-based tools for healthcare assistance.
-- Build a user-friendly and accessible digital healthcare experience.
+---
 
-## 🛠️ Technology Stack
+## Architecture & Directory Structure
 
-The project uses a web-based frontend and backend architecture. The exact technologies and integrations are documented in the respective project folders.
-
-- **Frontend:** HTML, CSS, JavaScript
-- **Backend:** Python, FastAPI
-- **Database:** SQLite
-- **API Documentation:** FastAPI Swagger UI
-- **QR Code:** QR code generation and scanning workflow
-- **AI:** Planned/configurable chest X-ray analysis model
-
-## 🏗️ Project Structure
-
-```text
-MEDIX/
-└── medix-prototype/
-    ├── frontend/
-    │   ├── index.html
-    │   ├── css/
-    │   └── js/
-    ├── backend/
-    │   ├── app/
-    │   ├── tests/
-    │   └── requirements.txt
-    ├── README.md
-    └── start.sh
+```
+medix-prototype/
+├── frontend/
+│   ├── index.html            # Clean, modern single-page application with hash routing
+│   ├── css/
+│   │   └── app.css           # Healthcare design system (Teal, Navy, Soft Slate)
+│   └── js/
+│       ├── api.js            # Centralized REST API client (http://127.0.0.1:8000)
+│       ├── qr.js             # Pure JavaScript offline SVG QR code generator
+│       └── app.js            # Single-page controller & view router for all 5 features
+├── backend/
+│   ├── app/
+│   │   ├── api/              # REST API route handlers
+│   │   │   ├── blood.py
+│   │   │   ├── health.py
+│   │   │   ├── patient.py
+│   │   │   ├── report.py
+│   │   │   ├── transplant.py
+│   │   │   └── xray.py
+│   │   ├── models/           # SQLAlchemy ORM models
+│   │   │   ├── blood.py
+│   │   │   ├── patient.py
+│   │   │   ├── report.py
+│   │   │   ├── transplant.py
+│   │   │   └── xray.py
+│   │   ├── schemas/          # Pydantic request & response validation
+│   │   │   ├── blood.py
+│   │   │   ├── health.py
+│   │   │   ├── patient.py
+│   │   │   ├── report.py
+│   │   │   ├── transplant.py
+│   │   │   └── xray.py
+│   │   ├── services/         # Modular business logic services
+│   │   │   ├── blood_service.py
+│   │   │   ├── patient_service.py
+│   │   │   ├── report_service.py
+│   │   │   ├── transplant_service.py
+│   │   │   └── xray_service.py
+│   │   ├── data/             # Idempotent demo dataset seeding
+│   │   ├── config.py         # Central configuration and CORS settings
+│   │   ├── database.py       # SQLite engine and session factory
+│   │   └── main.py           # FastAPI application & lifespan startup
+│   ├── tests/
+│   │   └── test_prototype_features.py # 29 Automated unit/integration tests
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── run.sh
+├── start.sh                  # Master one-click startup script
+└── README.md
 ```
 
-## ⚙️ Getting Started
+---
 
-### Prerequisites
+## Quick Start
 
-- Python 3.10 or a compatible version
-- A modern web browser
-- A terminal or command-line interface
+### Option 1: Master Launcher (Recommended)
+From the `medix-prototype/` folder, run:
+```bash
+./start.sh
+```
+This automatically launches:
+- **Frontend Web App:** `http://localhost:3001`
+- **Backend API:** `http://127.0.0.1:8000`
+- **Swagger Documentation:** `http://127.0.0.1:8000/docs`
 
-### Run Locally
+### Option 2: Individual Terminal Commands
 
-1. Clone the repository:
+**Terminal 1 — Backend:**
+```bash
+cd backend
+./run.sh
+```
 
-   ```bash
-   git clone https://github.com/PALAK08-DEL/MEDIX.git
-   ```
+**Terminal 2 — Frontend:**
+```bash
+cd frontend
+python3 -m http.server 3001
+```
 
-2. Open the project directory:
+---
 
-   ```bash
-   cd MEDIX/medix-prototype
-   ```
+## Running the Automated Test Suite
 
-3. Follow the setup instructions in the prototype's README file.
+The test suite runs against an isolated, temporary in-memory SQLite database, leaving the primary demo database untouched.
 
-4. Start the application using the provided startup script, if available:
+```bash
+cd backend
+pytest tests/test_prototype_features.py -v
+```
 
-   ```bash
-   ./start.sh
-   ```
+All 29 tests verify:
+- Health check & API root
+- Blood bank search, filtering, holds (success & 409 conflict), and donor pledges
+- Transplant centre directory, organ filtering, educational guidelines, and pledges
+- Patient profile creation, opaque token generation, public vs. paramedic tiered resolution, and token revocation (`HTTP 410 Gone`)
+- X-ray engine status, presets, file validation, and honest zero-fabrication reporting
+- Report text and PDF extraction, clinical highlight isolation, and empty file rejection
 
-5. Open the frontend at `http://localhost:3001`.
+---
 
-6. Access the backend API documentation at `http://127.0.0.1:8000/docs`.
-
-## 🔒 Privacy & Security
-
-MEDIX is a prototype intended for educational and demonstration purposes. Patient information should be handled carefully, and access to medical records should be restricted to authorized users. Do not upload real patient data, passwords, API keys, or other sensitive information to this repository.
-
-## ⚠️ Disclaimer
-
-MEDIX is a student-built prototype and is **not a substitute for professional medical advice, diagnosis, or treatment**. AI-based analysis must not be relied upon for clinical decisions. Features requiring an AI model or external services may need additional configuration before they can operate fully.
-
-## 🔮 Future Scope
-
-- Integration with verified healthcare providers and blood banks.
-- Secure patient authentication and access controls.
-- Real-time availability updates.
-- Integration of a validated AI model for chest X-ray analysis.
-- Improved accessibility and multilingual support.
-- Deployment on a secure, scalable cloud platform.
-
-## 👩‍💻 Project Information
-
-**Project Name:** MEDIX  
-**Tagline:** Connecting Care. Saving Lives.  
-**Project Type:** Healthcare Technology / Hackathon Prototype
-
-## 📜 License
-
-A license has not yet been specified. Add an appropriate open-source license before permitting others to reuse or distribute this project.
+## Disclaimer
+MEDIX is a student healthcare hackathon proof-of-concept prototype. All patient records, hospital contacts, inventory metrics, and doctor entries are simulated demonstration data. Not connected to real hospital databases, clinical records, or live municipal emergency services.
